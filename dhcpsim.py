@@ -455,6 +455,8 @@ class DhcpServer(object):
             if response:
                 logging.info("Sending {} packet to {} - {}".format(response.options[DhcpOption.MessageType].name, response.chaddr, response))
                 self.sock.sendto(response.encode(), ("<broadcast>", 68))
+    def stop(self):
+        self.sock.close()
 
 def main():
     parser = argparse.ArgumentParser(description="Simulate a DHCP server")
@@ -475,7 +477,10 @@ def main():
             client_reservations[res.mac] = res
 
     server = DhcpServer(client_reservations)
-    server.start()
+    try:
+        server.start()
+    except KeyboardInterrupt:
+        server.stop()
 
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s | %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
