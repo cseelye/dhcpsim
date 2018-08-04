@@ -221,8 +221,8 @@ class DhcpPacket(object):
 
         header = raw_packet[0:240]
         dhcp_options = raw_packet[240:]
-        logger.debug("incoming header = {}".format(hexlify(header)))
-        logger.debug("incoming options = {}".format(hexlify(dhcp_options)))
+        logging.debug("incoming header = {}".format(hexlify(header)))
+        logging.debug("incoming options = {}".format(hexlify(dhcp_options)))
 
         # Decode the header
         self.op = int(hexlify(header[0:1]), 16)
@@ -253,12 +253,12 @@ class DhcpPacket(object):
             opt_raw = dhcp_options[idx:idx+opt_len]
             idx += opt_len
 
-            logger.debug("  opt_id={}, opt_len={}, opt_raw={}".format(opt_id, opt_len, opt_raw))
+            logging.debug("  opt_id={}, opt_len={}, opt_raw={}".format(opt_id, opt_len, opt_raw))
 
             try:
                 opt_id = DhcpOption(opt_id)
             except ValueError:
-                logger.warning("Unknown option {}".format(opt_id))
+                logging.warning("Unknown option {}".format(opt_id))
                 continue
 
             if opt_id == DhcpOption.Padding:
@@ -267,13 +267,13 @@ class DhcpPacket(object):
                 break
 
             if opt_id not in CODECS.keys() or "decode_val" not in CODECS[opt_id]:
-                logger.warning("No decoder for option {}".format(opt_id))
+                logging.warning("No decoder for option {}".format(opt_id))
                 continue
 
             try:
                 self.options[opt_id] = CODECS[opt_id]["decode_val"](opt_raw)
             except (ValueError, TypeError, IndexError, AttributeError, OSError) as ex:
-                logger.error("Error decoding option {}: {} - {}".format(opt_id.name, type(ex).__name__, ex))
+                logging.error("Error decoding option {}: {} - {}".format(opt_id.name, type(ex).__name__, ex))
                 continue
 
     def encode(self):
@@ -297,20 +297,20 @@ class DhcpPacket(object):
         data += ("0"*384).encode("utf-8")
         data += self.magiccookie.encode("utf-8")
 
-        logger.debug("outgoing header = {}".format(data))
-        logger.debug("  op     = {}".format(data[0:2]))
-        logger.debug("  htype  = {}".format(data[2:4]))
-        logger.debug("  hlen   = {}".format(data[4:6]))
-        logger.debug("  hops   = {}".format(data[6:8]))
-        logger.debug("  xid    = {}".format(data[8:16]))
-        logger.debug("  secs   = {}".format(data[16:20]))
-        logger.debug("  flags  = {}".format(data[20:24]))
-        logger.debug("  ciaddr = {}".format(data[24:32]))
-        logger.debug("  yiaddr = {}".format(data[32:40]))
-        logger.debug("  siaddr = {}".format(data[40:48]))
-        logger.debug("  giaddr = {}".format(data[48:56]))
-        logger.debug("  chaddr = {}".format(data[56:88]))
-        logger.debug("  magic cookie = {}".format(data[-8:]))
+        logging.debug("outgoing header = {}".format(data))
+        logging.debug("  op     = {}".format(data[0:2]))
+        logging.debug("  htype  = {}".format(data[2:4]))
+        logging.debug("  hlen   = {}".format(data[4:6]))
+        logging.debug("  hops   = {}".format(data[6:8]))
+        logging.debug("  xid    = {}".format(data[8:16]))
+        logging.debug("  secs   = {}".format(data[16:20]))
+        logging.debug("  flags  = {}".format(data[20:24]))
+        logging.debug("  ciaddr = {}".format(data[24:32]))
+        logging.debug("  yiaddr = {}".format(data[32:40]))
+        logging.debug("  siaddr = {}".format(data[40:48]))
+        logging.debug("  giaddr = {}".format(data[48:56]))
+        logging.debug("  chaddr = {}".format(data[56:88]))
+        logging.debug("  magic cookie = {}".format(data[-8:]))
 
         # Encode the options
         options_data = b""
@@ -319,12 +319,12 @@ class DhcpPacket(object):
                 opt_encoded = "{:02x}".format(opt.value).encode("utf-8")
                 opt_val_encoded = CODECS[opt]["encode_val"](value)
                 opt_len_encoded = CODECS[opt]["encode_length"](value)
-                logger.debug("  {}={}, len={}, val={}".format(opt.name, opt_encoded[0:2], opt_len_encoded, opt_val_encoded))
+                logging.debug("  {}={}, len={}, val={}".format(opt.name, opt_encoded[0:2], opt_len_encoded, opt_val_encoded))
                 opt_encoded += opt_len_encoded
                 opt_encoded += opt_val_encoded
                 options_data += opt_encoded
             except (ValueError, TypeError, IndexError, AttributeError, OSError) as ex:
-                logger.error("Error encoding option {}: {}".format(opt.name, ex))
+                logging.error("Error encoding option {}: {}".format(opt.name, ex))
                 continue
 
         return unhexlify(data + options_data)
@@ -466,7 +466,7 @@ def main():
     args = parser.parse_args()
 
     if args.debug:
-        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getlogging().setLevel(logging.DEBUG)
 
     client_reservations = {}
     if args.reservation:
